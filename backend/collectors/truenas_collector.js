@@ -1223,7 +1223,7 @@ class TrueNASCollector extends BaseCollector {
               name: vm.name,
               status: vm.status,
               vcpus: vm.vcpus,
-              memory: vm.memory,
+              memory: vm.memory ? vm.memory * 1024 * 1024 : null,
               autostart: vm.autostart,
               platform: "truenas",
               platform_data: {
@@ -1243,7 +1243,7 @@ class TrueNASCollector extends BaseCollector {
               name: vm.name,
               status: this._mapVMStatus(vm.status),
               vcpus: vm.cpu,
-              memory: vm.memory,
+              memory: vm.memory ? vm.memory * 1024 * 1024 : null,
               autostart: vm.autostart,
               platform: "truenas",
               platform_data: {
