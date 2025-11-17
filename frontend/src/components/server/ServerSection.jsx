@@ -57,6 +57,7 @@ function ServerSectionComponent({
   platformName,
   systemInfo,
   vms,
+  enhancedFeaturesEnabled,
   portLayout,
   onPortLayoutChange,
   isExpanded,
@@ -217,6 +218,8 @@ function ServerSectionComponent({
 
   const hasSystemInfo = systemInfo && Object.keys(systemInfo).length > 0;
   const hasVMs = vms && vms.length > 0;
+  const isTrueNAS = platformName?.toLowerCase().includes("truenas");
+  const showVMSection = hasVMs || (isTrueNAS && enhancedFeaturesEnabled === false);
 
   const getHostDisplay = () => {
     if (!serverUrl) {
@@ -263,7 +266,7 @@ function ServerSectionComponent({
         </div>
       </div>
 
-      {(hasSystemInfo || hasVMs) && (
+      {(hasSystemInfo || showVMSection) && (
         <div>
           <div className="flex items-center justify-end mb-4">
             <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-900 rounded-lg p-1">
@@ -332,7 +335,7 @@ function ServerSectionComponent({
                 </AccordionContent>
               </AccordionItem>
             )}
-            {hasVMs && (
+            {showVMSection && (
               <AccordionItem
                 value="vms"
                 className="border rounded-xl bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/50 shadow-sm"
@@ -340,11 +343,11 @@ function ServerSectionComponent({
                 <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-slate-900 dark:text-slate-100 hover:no-underline">
                   <div className="flex items-center">
                     <VmIcon className="h-5 w-5 mr-3 text-slate-600 dark:text-slate-400" />
-                    Virtual Machines ({vms.length})
+                    Virtual Machines {hasVMs && `(${vms.length})`}
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-6">
-                  <VMsCard vms={vms} />
+                  <VMsCard vms={vms} enhancedFeaturesEnabled={enhancedFeaturesEnabled} />
                 </AccordionContent>
               </AccordionItem>
             )}

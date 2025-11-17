@@ -1,5 +1,6 @@
 import { Server, Zap, HardDrive, Box } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
+import { TrueNASApiKeyEmptyState } from "./TrueNASApiKeyEmptyState";
 
 function VMItem({ vm }) {
   const status = typeof vm.status === 'string' ? vm.status : (vm.status?.state || 'unknown');
@@ -54,7 +55,11 @@ function VMItem({ vm }) {
   );
 }
 
-export function VMsCard({ vms }) {
+export function VMsCard({ vms, enhancedFeaturesEnabled }) {
+  if (enhancedFeaturesEnabled === false) {
+    return <TrueNASApiKeyEmptyState />;
+  }
+
   if (!vms || vms.length === 0) return null;
 
   return (

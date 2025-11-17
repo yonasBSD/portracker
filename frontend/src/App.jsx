@@ -432,7 +432,7 @@ export default function App() {
                   vms: scanData.vms,
                   parentId: server.parentId,
                   platform_type: server.platform_type || scanData.platform,
-                  enhancedFeaturesEnabled: true,
+                  enhancedFeaturesEnabled: scanData.enhancedFeaturesEnabled ?? true,
                 };
               } else {
                 const errorData = await scanResponse
@@ -493,7 +493,7 @@ export default function App() {
                   vms: scanData.vms,
                   parentId: server.parentId,
                   platform_type: server.platform_type || scanData.platform,
-                  enhancedFeaturesEnabled: true,
+                  enhancedFeaturesEnabled: scanData.enhancedFeaturesEnabled ?? true,
                 };
               } else {
                 const errorData = await scanResponse.json().catch(() => ({
@@ -1305,7 +1305,7 @@ export default function App() {
               vms: scanData.vms,
               parentId: serverData.parentId,
               platform_type: serverData.platform_type || scanData.platform,
-              enhancedFeaturesEnabled: true,
+              enhancedFeaturesEnabled: scanData.enhancedFeaturesEnabled ?? true,
             };
 
             setGroups((currentGroups) =>
@@ -1530,6 +1530,7 @@ export default function App() {
         platformName={server.platformName}
         systemInfo={server.systemInfo}
         vms={server.vms}
+        enhancedFeaturesEnabled={server.enhancedFeaturesEnabled}
         infoCardLayout={infoCardLayout}
         onInfoCardLayoutChange={setInfoCardLayout}
         portLayout={portLayout}
