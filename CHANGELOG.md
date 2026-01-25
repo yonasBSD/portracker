@@ -2,6 +2,12 @@
 
 All notable changes to portracker will be documented in this file.
 
+## [Unreleased]
+
+### UI
+
+- **Favicon**: Dark mode support - favicon now adapts to system theme (black on light, white on dark)
+
 ## [1.2.2] - 2025-12-12
 
 ### Performance & Reliability
