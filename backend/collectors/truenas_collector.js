@@ -485,6 +485,8 @@ class TrueNASCollector extends BaseCollector {
       for (const container of containers) {
         const containerName = this._formatContainerNames(container.Names);
         const containerId = container.ID;
+        const composeProject = container.Labels?.['com.docker.compose.project'] || null;
+        const composeService = container.Labels?.['com.docker.compose.service'] || null;
 
         const rawPorts = await this.dockerApi.docker.getContainer(container.ID).inspect();
         const portBindings = rawPorts.NetworkSettings.Ports || {};
@@ -516,6 +518,8 @@ class TrueNASCollector extends BaseCollector {
               container_id: containerId,
               vm_id: null,
               app_id: containerId,
+              compose_project: composeProject,
+              compose_service: composeService,
             });
           }
         }
@@ -541,7 +545,9 @@ class TrueNASCollector extends BaseCollector {
               container_id: containerId,
               vm_id: null,
               app_id: containerId,
-              internal: true
+              internal: true,
+              compose_project: composeProject,
+              compose_service: composeService,
             });
           }
         }
@@ -1958,7 +1964,6 @@ class TrueNASCollector extends BaseCollector {
       }
     });
     
-    const totalCollected = (results.apps?.length || 0) + (results.vms?.length || 0) + (results.containers?.length || 0);
     const successCount = apiCalls.length - results.failures.length;
     
     if (results.failures.length === 0) {
