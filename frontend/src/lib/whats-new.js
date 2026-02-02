@@ -18,7 +18,7 @@ function createFeatureBuckets() {
   return CATEGORY_KEYS.reduce((acc, key) => {
     acc[key] = [];
     return acc;
-  }, {});
+  }, { highlights: [] });
 }
 
 const CATEGORY_MAPPINGS = [
@@ -48,11 +48,34 @@ export function parseChangelog(changelogContent) {
     const lines = changelogContent.split('\n');
     let currentVersion = null;
     let currentSection = null;
+    let inHighlights = false;
     let features = createFeatureBuckets();
     let lastFeature = null;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
+
+      if (line === '**Highlights**') {
+        inHighlights = true;
+        continue;
+      }
+
+      if (inHighlights && (line === '---' || line.startsWith('###'))) {
+        inHighlights = false;
+        if (line.startsWith('###')) {
+          currentSection = mapSectionToCategory(line.replace(/^###\s+/, ''));
+        }
+        continue;
+      }
+
+      if (inHighlights && line.startsWith('- ')) {
+        const highlightText = line.replace(/^-\s*/, '');
+        const parts = highlightText.split(/\s*[—–-]\s*/);
+        const title = parts[0]?.trim() || highlightText;
+        const description = parts[1]?.trim() || '';
+        features.highlights.push({ title, description });
+        continue;
+      }
 
       const versionMatch = line.match(/^##\s*\[([^\]]+)\]/);
       if (versionMatch) {

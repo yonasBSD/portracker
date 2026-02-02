@@ -1,9 +1,35 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './dialog';
 import { Button } from './button';
-import { Globe, Database, Sparkles, Shield, Layout, Server, HardDrive, Wrench, Package, Bandage } from 'lucide-react';
+import { Globe, Database, Sparkles, Shield, Layout, Server, HardDrive, Wrench, Package, Bandage, Star } from 'lucide-react';
 import { getFeatureIcon } from '../../lib/feature-icons';
 import { cn } from '@/lib/utils';
+
+const HighlightsSection = ({ highlights }) => {
+  if (!highlights?.length) return null;
+  
+  return (
+    <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800">
+      <div className="flex items-center gap-2 mb-3">
+        <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+        <h3 className="font-bold text-slate-900 dark:text-slate-100">Highlights</h3>
+      </div>
+      <ul className="space-y-2">
+        {highlights.map((item, index) => (
+          <li key={index} className="flex items-start gap-2">
+            <span className="text-indigo-600 dark:text-indigo-400 mt-0.5">•</span>
+            <div>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{item.title}</span>
+              {item.description && (
+                <span className="text-slate-600 dark:text-slate-400"> — {item.description}</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const FeatureCard = ({ feature, index }) => {
   const IconComponent = getFeatureIcon(feature);
@@ -96,6 +122,8 @@ const VersionSection = ({ versionData, index }) => (
       </h2>
     </div>
 
+    <HighlightsSection highlights={versionData.changes.highlights} />
+
     <div className="space-y-4">
       {versionData.changes.security?.length > 0 && (
         <CategorySection
@@ -174,6 +202,8 @@ const VersionSection = ({ versionData, index }) => (
 
 const FlatChangesDisplay = ({ changes }) => (
   <>
+    <HighlightsSection highlights={changes.highlights} />
+
     {changes.security?.length > 0 && (
       <CategorySection
         title="Security & Access Control"
