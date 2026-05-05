@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useOverrides } from "@/hooks/useOverrides";
 
-const VERSION = "1.3.0";
+const VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0";
 
 const REFRESH_INTERVALS = [
   { value: 15000, label: "15s" },
