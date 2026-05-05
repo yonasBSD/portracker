@@ -58,6 +58,27 @@ function normalizeDescription(text) {
     .trim();
 }
 
+const highlights = [];
+let inHighlights = false;
+for (const raw of captured) {
+  const line = raw.trim();
+  if (line === "**Highlights**") {
+    inHighlights = true;
+    continue;
+  }
+  if (inHighlights && (line === "---" || line.startsWith("###"))) {
+    inHighlights = false;
+    continue;
+  }
+  if (inHighlights && line.startsWith("- ")) {
+    const text = line.replace(/^-\s*/, "");
+    const parts = text.split(/\s+[\-\u2013\u2014]\s+/);
+    const title = (parts[0] || text).trim();
+    const description = (parts.slice(1).join(" \u2014 ") || "").trim();
+    highlights.push({ title, description });
+  }
+}
+
 const bulletPattern = /^\s*-\s*\*\*\[?([^*\]]+?)\]?\*\*:\s*(.+)$/;
 const subBulletPattern = /^\s*-\s*\*\*\[sub\]\*\*\s+(.+)$/i;
 
@@ -141,13 +162,22 @@ const compareUrl = previousVersion
   ? `https://github.com/${repository}/compare/v${previousVersion}...v${version}`
   : `https://github.com/${repository}/releases`;
 
-const body = [
-  `## What's New in ${version}`,
-  "",
-  ...filtered,
-  "",
-  `**Full Changelog**: ${compareUrl}`,
-  "",
-].join("\n");
+const bodyLines = [`## What's New in ${version}`, ""];
+
+if (highlights.length > 0) {
+  for (const h of highlights) {
+    if (h.description) {
+      bodyLines.push(`- **${h.title}** \u2014 ${h.description}`);
+    } else {
+      bodyLines.push(`- **${h.title}**`);
+    }
+  }
+} else {
+  bodyLines.push(...filtered);
+}
+
+bodyLines.push("", `**Full Changelog**: ${compareUrl}`, "");
+
+const body = bodyLines.join("\n");
 
 process.stdout.write(body);
