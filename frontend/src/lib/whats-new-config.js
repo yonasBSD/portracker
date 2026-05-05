@@ -25,11 +25,45 @@ const whatsNewConfig = {
     'Data Collection',
     'Docker Integration',
     'Web Interface',
-    'Server Management',
-    'Server Health Indicator',
-    'Last Refreshed Timestamp'
+    'Server Management'
   ],
   featureOverrides: {
+    'Sidebar Reordering': {
+      title: 'Drag-and-drop sidebar order',
+      description: 'Reorder servers by dragging; the order persists across reloads and prioritizes autoxpose suggestions based on your custom order.'
+    },
+    'Sidebar Sort Modes': {
+      title: 'Custom and alphabetical sort modes',
+      description: 'A sidebar chip cycles through Custom, A→Z, and Z→A. Alphabetical modes are view-only, with an undo banner to revert.'
+    },
+    'Sidebar Controls': {
+      title: 'Resizable, collapsible sidebar',
+      description: 'Resize the desktop sidebar or collapse it to an icon rail; a one-time coachmark points out the new controls.'
+    },
+    'Keyboard Shortcuts': {
+      title: 'Keyboard shortcuts',
+      description: 'Cmd/Ctrl+K focuses search, Esc clears, Cmd/Ctrl+B toggles the sidebar, Cmd/Ctrl+R refreshes, and 1–9 quick-switch between servers.'
+    },
+    'Server Health Indicator': {
+      title: 'Server health at a glance',
+      description: 'Sidebar server cards show a colored dot — green for online, red for unreachable, a blue pulse while updating.'
+    },
+    'Last Refreshed Timestamp': {
+      title: '"Updated Xm ago" on every server',
+      description: 'Each server card shows a live-updating timestamp of when its data was last fetched.'
+    },
+    'Status Wording': {
+      title: 'Clearer port status wording',
+      description: 'Updated copy on per-port indicators and the rolled-up status dot so an unreachable published port reads clearly.'
+    },
+    'Status Dot Loading State': {
+      title: 'Smoother loading state',
+      description: 'Service cards show a soft pulsing dot while health data is loading instead of briefly flashing red.'
+    },
+    'Service Card Grouping': {
+      title: 'Consolidated multi-port services',
+      description: 'Containers publishing multiple ports now group into a single service card instead of splitting on inconsistent compose labels.'
+    },
     'Container Heuristic': {
       title: 'Better service naming in stack deployments',
       description: 'Reduced false matches when containers share the same stack name.'
