@@ -4,6 +4,20 @@ All notable changes to portracker will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **[Sidebar Controls]**: Desktop sidebar can now be resized, collapsed to a cleaner icon rail, and rediscovered with a one-time coachmark that points out the new controls.
+- **[Keyboard Shortcuts]**: `Cmd/Ctrl+K` focuses search, `Escape` clears and blurs, `Cmd/Ctrl+B` toggles the sidebar, `Cmd/Ctrl+R` refreshes, and `1`–`9` quick-switch between servers.
+- **[Server Health Indicator]**: Server cards in the sidebar now show a colored dot (green = online, red = unreachable, blue pulse = updating).
+- **[Last Refreshed Timestamp]**: Each server card displays a live-updating "Updated Xm ago" label showing when data was last fetched.
+
+### Fixed
+
+- **[Status Dot Spacing]**: Restored the gap between the rolled-up service status dot and the service name in card headers.
+- **[Status Wording]**: Updated copy on per-port indicators, the rolled-up status dot, and the "Why this status?" details so a published port that isn't reachable now reads clearly instead of using ambiguous "did not answer" / "not responding" phrasing.
+- **[Status Dot Loading State]**: Service cards now show a soft pulsing dot while service health data is loading instead of briefly flashing red on services whose published ports were partially unreachable.
+- **[Service Card Grouping]**: Containers that publish multiple ports now consolidate into a single service card instead of splitting into several rows when their compose labels were inconsistent across collection paths.
+
 ## [1.3.7] - 2026-04-02
 
 ### Fixed
