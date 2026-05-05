@@ -4,13 +4,14 @@ All notable changes to portracker will be documented in this file.
 
 ## [Unreleased]
 
-## [1.3.9] - 2026-05-05
+## [1.3.10] - 2026-05-05
 
 ### Fixed
 
-<!-- whatsnew:title=Service status fix on default Docker bridge -->
-<!-- whatsnew:description=Probes now use the Docker host gateway when a port is bound to 0.0.0.0, so status no longer flips to yellow/red without HOST_OVERRIDE. -->
+<!-- whatsnew:title=Service status & sidebar shortcut fixes -->
+<!-- whatsnew:description=Probes use the Docker host gateway for 0.0.0.0 ports so status no longer flips to yellow/red on default-bridge installs. The sidebar tip now shows the correct keyboard shortcut for your OS. -->
 - **[Probe Host Resolution]**: Service status probes fall back to the Docker host gateway for `0.0.0.0`/`::` ports instead of `127.0.0.1`, fixing false yellow/red statuses on default-bridge installs without `HOST_OVERRIDE`.
+- **[Sidebar Shortcut Label]**: The "sidebar has knobs" tip now shows the correct keyboard shortcut for your OS (`⌘B`/`⌘K` on macOS, `Ctrl+B`/`Ctrl+K` elsewhere) instead of a combined string that could wrap mid-pair on narrow sidebars.
 
 ## [1.3.8] - 2026-05-04
 

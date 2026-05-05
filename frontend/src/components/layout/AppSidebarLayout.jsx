@@ -3,8 +3,10 @@ import { DashboardLayout } from "./DashboardLayout";
 import { Sidebar } from "./Sidebar";
 import { CollapsedSidebar } from "./CollapsedSidebar";
 
-const SIDEBAR_SHORTCUT_LABEL = "⌘B / Ctrl+B";
-const SEARCH_SHORTCUT_LABEL = "⌘K / Ctrl+K";
+const IS_MAC =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+const SIDEBAR_SHORTCUT_LABEL = IS_MAC ? "⌘B" : "Ctrl+B";
+const SEARCH_SHORTCUT_LABEL = IS_MAC ? "⌘K" : "Ctrl+K";
 
 export function AppSidebarLayout({
   isSidebarOpen,
