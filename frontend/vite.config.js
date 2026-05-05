@@ -7,14 +7,14 @@ import { readFileSync } from 'fs'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const rootPkg = JSON.parse(readFileSync(resolve(__dirname, '..', 'package.json'), 'utf8'))
+const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8'))
 
 export default defineConfig({
   plugins: [
     react(),
   ],
   define: {
-    __APP_VERSION__: JSON.stringify(rootPkg.version),
+    __APP_VERSION__: JSON.stringify(pkg.version),
   },
   resolve: {
     alias: {
