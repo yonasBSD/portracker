@@ -12,6 +12,19 @@ const {
   DEFAULT_TIMEOUT_MS,
 } = require('./probes');
 const { aggregate } = require('./aggregate');
+const { getDockerHostIP } = require('../docker-host');
+
+let cachedDockerHostIp;
+function dockerHostIpFallback() {
+  if (cachedDockerHostIp === undefined) {
+    try {
+      cachedDockerHostIp = getDockerHostIP() || '';
+    } catch (_e) {
+      cachedDockerHostIp = '';
+    }
+  }
+  return cachedDockerHostIp;
+}
 
 function safeLower(v) {
   return typeof v === 'string' ? v.toLowerCase() : '';
@@ -21,7 +34,7 @@ function resolveProbeHost(hostIp) {
   const h = safeLower(hostIp);
   const override = (process.env.HOST_OVERRIDE || '').trim();
   if (h === '' || h === '0.0.0.0' || h === '::' || h === '[::]') {
-    return override || '127.0.0.1';
+    return override || dockerHostIpFallback() || '127.0.0.1';
   }
   if (h === '::1') return '::1';
   return hostIp;
