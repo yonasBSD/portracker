@@ -54,23 +54,26 @@ function shouldIgnoreVersion(version) {
   return ignoredVersions.includes(version) || !SEMVER_PATTERN.test(version);
 }
 
-function applyFeatureOverrides(feature) {
-  const hiddenTitles = new Set((whatsNewConfig.hiddenTitles || []).map((title) => title.toLowerCase()));
-  const normalizedTitle = normalizeFeatureTitle(feature.title);
+const DIRECTIVE_PATTERN = /^<!--\s*whatsnew:([a-z]+)(?:=(.*?))?\s*-->\s*$/i;
 
-  if (hiddenTitles.has(normalizedTitle.toLowerCase())) {
-    return null;
-  }
+function emptyDirectives() {
+  return { hide: false, title: null, description: null };
+}
 
-  const override = whatsNewConfig.featureOverrides?.[normalizedTitle];
-  if (override?.hidden) {
-    return null;
-  }
+function parseDirectiveLine(line) {
+  const match = line.match(DIRECTIVE_PATTERN);
+  if (!match) return null;
+  const key = match[1].toLowerCase();
+  const value = match[2] !== undefined ? match[2].trim() : null;
+  return { key, value };
+}
 
+function applyDirectives(feature, directives) {
+  if (directives.hide) return null;
   return {
     ...feature,
-    title: override?.title || normalizedTitle,
-    description: override?.description || normalizeFeatureDescription(feature.description),
+    title: directives.title || normalizeFeatureTitle(feature.title),
+    description: directives.description || normalizeFeatureDescription(feature.description),
     details: Array.isArray(feature.details)
       ? feature.details
           .map((detail) => ({
@@ -112,12 +115,23 @@ export function parseChangelog(changelogContent) {
     let inHighlights = false;
     let features = createFeatureBuckets();
     let lastFeature = null;
+    let pendingDirectives = emptyDirectives();
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+      const rawLine = lines[i];
+      const line = rawLine.trim();
+
+      const directive = parseDirectiveLine(line);
+      if (directive) {
+        if (directive.key === 'hide') pendingDirectives.hide = true;
+        else if (directive.key === 'title') pendingDirectives.title = directive.value;
+        else if (directive.key === 'description') pendingDirectives.description = directive.value;
+        continue;
+      }
 
       if (line === '**Highlights**') {
         inHighlights = true;
+        pendingDirectives = emptyDirectives();
         continue;
       }
 
@@ -126,6 +140,7 @@ export function parseChangelog(changelogContent) {
         if (line.startsWith('###')) {
           currentSection = mapSectionToCategory(line.replace(/^###\s+/, ''));
         }
+        pendingDirectives = emptyDirectives();
         continue;
       }
 
@@ -135,6 +150,7 @@ export function parseChangelog(changelogContent) {
         const title = parts[0]?.trim() || highlightText;
         const description = parts[1]?.trim() || '';
         features.highlights.push({ title, description });
+        pendingDirectives = emptyDirectives();
         continue;
       }
 
@@ -144,17 +160,19 @@ export function parseChangelog(changelogContent) {
         if (currentVersion && hasContent) {
           versions[currentVersion] = { ...features };
         }
-        
+
         currentVersion = versionMatch[1];
         if (shouldIgnoreVersion(currentVersion)) {
           currentSection = null;
           features = createFeatureBuckets();
           lastFeature = null;
+          pendingDirectives = emptyDirectives();
           continue;
         }
         currentSection = null;
         features = createFeatureBuckets();
         lastFeature = null;
+        pendingDirectives = emptyDirectives();
         continue;
       }
 
@@ -162,6 +180,7 @@ export function parseChangelog(changelogContent) {
       if (sectionMatch && currentVersion) {
         currentSection = mapSectionToCategory(sectionMatch[1]);
         lastFeature = null;
+        pendingDirectives = emptyDirectives();
         continue;
       }
 
@@ -169,9 +188,9 @@ export function parseChangelog(changelogContent) {
       if (featureMatch && currentSection) {
         const title = featureMatch[1].trim();
         const description = featureMatch[2].trim();
-        
+
         const isSubItem = title.startsWith('[sub]');
-        
+
         if (isSubItem && lastFeature) {
           const cleanTitle = title.replace(/^\[sub\]\s*/, '').trim();
           if (!lastFeature.details) {
@@ -179,12 +198,12 @@ export function parseChangelog(changelogContent) {
           }
           lastFeature.details.push({ title: cleanTitle, description });
         } else {
-          const nextFeature = applyFeatureOverrides({
+          const nextFeature = applyDirectives({
             title: isSubItem ? title.replace(/^\[sub\]\s*/, '').trim() : title,
             description,
             details: []
-          });
-          
+          }, pendingDirectives);
+
           if (nextFeature) {
             features[currentSection].push(nextFeature);
             lastFeature = nextFeature;
@@ -192,6 +211,7 @@ export function parseChangelog(changelogContent) {
             lastFeature = null;
           }
         }
+        pendingDirectives = emptyDirectives();
         continue;
       }
 
@@ -202,6 +222,7 @@ export function parseChangelog(changelogContent) {
           lastFeature.details = [];
         }
         lastFeature.details.push({ title: '', description: normalizeFeatureDescription(text) });
+        pendingDirectives = emptyDirectives();
       }
     }
 

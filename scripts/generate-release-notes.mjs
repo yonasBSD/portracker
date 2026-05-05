@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,16 +15,6 @@ if (!version) {
   console.error("usage: generate-release-notes.mjs <version> [previous-version]");
   process.exit(1);
 }
-
-const configUrl = pathToFileURL(
-  resolve(repoRoot, "frontend/src/lib/whats-new-config.js")
-).href;
-const { default: whatsNewConfig } = await import(configUrl);
-
-const hiddenTitles = new Set(
-  (whatsNewConfig.hiddenTitles || []).map((title) => title.toLowerCase())
-);
-const featureOverrides = whatsNewConfig.featureOverrides || {};
 
 const changelog = readFileSync(resolve(repoRoot, "CHANGELOG.md"), "utf8");
 const lines = changelog.split("\n");
@@ -58,24 +48,24 @@ function normalizeDescription(text) {
     .trim();
 }
 
+const DIRECTIVE_PATTERN = /^\s*<!--\s*whatsnew:([a-z]+)(?:=(.*?))?\s*-->\s*$/i;
+function emptyDirectives() {
+  return { hide: false, title: null, description: null };
+}
+
 const highlights = [];
 let inHighlights = false;
 for (const raw of captured) {
   const line = raw.trim();
-  if (line === "**Highlights**") {
-    inHighlights = true;
-    continue;
-  }
-  if (inHighlights && (line === "---" || line.startsWith("###"))) {
-    inHighlights = false;
-    continue;
-  }
+  if (line === "**Highlights**") { inHighlights = true; continue; }
+  if (inHighlights && (line === "---" || line.startsWith("###"))) { inHighlights = false; continue; }
   if (inHighlights && line.startsWith("- ")) {
     const text = line.replace(/^-\s*/, "");
     const parts = text.split(/\s+[\-\u2013\u2014]\s+/);
-    const title = (parts[0] || text).trim();
-    const description = (parts.slice(1).join(" \u2014 ") || "").trim();
-    highlights.push({ title, description });
+    highlights.push({
+      title: (parts[0] || text).trim(),
+      description: (parts.slice(1).join(" \u2014 ") || "").trim(),
+    });
   }
 }
 
@@ -86,19 +76,29 @@ const out = [];
 let lastVisible = true;
 let currentSection = null;
 let sectionHasContent = false;
+let pendingDirectives = emptyDirectives();
 
 for (const raw of captured) {
   const line = raw.trimEnd();
 
+  const directive = line.match(DIRECTIVE_PATTERN);
+  if (directive) {
+    const key = directive[1].toLowerCase();
+    const value = directive[2] !== undefined ? directive[2].trim() : null;
+    if (key === "hide") pendingDirectives.hide = true;
+    else if (key === "title") pendingDirectives.title = value;
+    else if (key === "description") pendingDirectives.description = value;
+    continue;
+  }
+
   const sectionMatch = line.match(/^###\s+(.+)$/);
   if (sectionMatch) {
-    if (currentSection && sectionHasContent) {
-      out.push("");
-    }
+    if (currentSection && sectionHasContent) out.push("");
     currentSection = sectionMatch[1].trim();
     sectionHasContent = false;
     out.push(`### ${currentSection}`);
     out.push("");
+    pendingDirectives = emptyDirectives();
     continue;
   }
 
@@ -106,6 +106,7 @@ for (const raw of captured) {
   if (subMatch && lastVisible) {
     out.push(`  - ${normalizeDescription(subMatch[1])}`);
     sectionHasContent = true;
+    pendingDirectives = emptyDirectives();
     continue;
   }
 
@@ -113,20 +114,17 @@ for (const raw of captured) {
   if (match) {
     const title = match[1].trim();
     const description = match[2].trim();
-    if (hiddenTitles.has(title.toLowerCase())) {
+    if (pendingDirectives.hide) {
       lastVisible = false;
+      pendingDirectives = emptyDirectives();
       continue;
     }
-    const override = featureOverrides[title];
-    if (override?.hidden) {
-      lastVisible = false;
-      continue;
-    }
-    const finalTitle = override?.title || title;
-    const finalDescription = override?.description || normalizeDescription(description);
+    const finalTitle = pendingDirectives.title || title;
+    const finalDescription = pendingDirectives.description || normalizeDescription(description);
     out.push(`- **${finalTitle}**: ${finalDescription}`);
     sectionHasContent = true;
     lastVisible = true;
+    pendingDirectives = emptyDirectives();
     continue;
   }
 
@@ -144,10 +142,7 @@ for (let i = 0; i < out.length; i++) {
     let hasContent = false;
     for (let j = i + 1; j < out.length; j++) {
       if (/^###\s+/.test(out[j])) break;
-      if (/^\s*-\s/.test(out[j])) {
-        hasContent = true;
-        break;
-      }
+      if (/^\s*-\s/.test(out[j])) { hasContent = true; break; }
     }
     if (!hasContent) {
       if (i + 1 < out.length && out[i + 1].trim() === "") i++;
@@ -165,19 +160,16 @@ const compareUrl = previousVersion
 const bodyLines = [`## What's New in ${version}`, ""];
 
 if (highlights.length > 0) {
+  bodyLines.push("### Highlights", "");
   for (const h of highlights) {
-    if (h.description) {
-      bodyLines.push(`- **${h.title}** \u2014 ${h.description}`);
-    } else {
-      bodyLines.push(`- **${h.title}**`);
-    }
+    if (h.description) bodyLines.push(`- **${h.title}** \u2014 ${h.description}`);
+    else bodyLines.push(`- **${h.title}**`);
   }
-} else {
-  bodyLines.push(...filtered);
+  bodyLines.push("");
 }
+
+if (filtered.length > 0) bodyLines.push(...filtered);
 
 bodyLines.push("", `**Full Changelog**: ${compareUrl}`, "");
 
-const body = bodyLines.join("\n");
-
-process.stdout.write(body);
+process.stdout.write(bodyLines.join("\n"));
